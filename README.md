@@ -1,0 +1,1 @@
+# fs-expand [![NPM version](https://badge.fury.io/js/fs-expand.png)](http://badge.fury.io/js/fs-expand) [![Build Status](https://travis-ci.org/kaelzhang/node-fs-expand.png?branch=master)](https://travis-ci.org/kaelzhang/node-fs-expand) [![Dependency Status](https://gemnasium.com/kaelzhang/node-fs-expand.png)](https://gemnasium.com/kaelzhang/node-fs-expand)
