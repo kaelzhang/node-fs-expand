@@ -20,3 +20,15 @@ expand('*.js', function(err, files){
 	console.log(files); // ['a.js', 'b.js']
 });
 ```
+
+## expand.sync(pattern, [options]);
+
+The synchronous version of `expand`.
+
+Returns the filenames found.
+
+```js
+var files = expand.sync(['*.js', '!a.js']);
+
+console.log(files); // ['b.js']
+```
