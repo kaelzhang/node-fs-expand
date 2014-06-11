@@ -2,7 +2,10 @@
 
 fs-expand is a standalone module to fetch all file or directory paths that match the given globbing pattern(s), which is much like [`grunt.file.expand`](http://gruntjs.com/api/grunt.file#grunt.file.expand)
 
-The difference from [`glob`](http://www.npmjs.org/package/glob) is that `fs-expand` could combine the results of several glob patterns.
+The difference from [`glob`](http://www.npmjs.org/package/glob) is that `fs-expand`
+
+- could combine the results of several glob patterns.
+- supports negative matching patterns, such as '!*.js'
 
 ## expand(pattern, [options], callback);
 
