@@ -6,6 +6,7 @@ expand.sync = expandSync;
 var glob = require('glob');
 var _ = require('underscore');
 var async = require('async');
+var node_path = require('path');
 
 // Process specified wildcard glob patterns or filenames against a
 // callback, excluding and uniquing files in the result set.
@@ -36,7 +37,13 @@ function processPatterns(patterns, fn) {
   return result;
 }
 
+function isGlob (pattern) {
+  return ~ pattern.indexOf('*');
+}
 
+
+// @param {options}
+// - globOnly: {Boolean} only deal with glob stars
 function expand(patterns, options, callback) {
   patterns = Array.isArray(patterns) ? patterns : [patterns];
 
@@ -47,9 +54,16 @@ function expand(patterns, options, callback) {
   
 
   async.parallel(
-    patterns.map(function(pattern) {
+    patterns
+    .filter(Boolean)
+    .map(function(pattern) {
       return function(done) {
-        glob(pattern, options, done);
+        if (options.globOnly && !isGlob(pattern)) {
+          pattern = node_path.join('.', pattern);
+          done(null, [pattern]);
+        } else {
+          glob(pattern, options, done);
+        }
       };
     }),
 
@@ -83,8 +97,12 @@ function expandSync(patterns, options) {
   return patterns.length === 0 ? [] :
 
     processPatterns(patterns, function(pattern) {
-
-      // Find all matching files for this pattern.
-      return glob.sync(pattern, options);
+      if (options.globOnly && !isGlob(pattern)) {
+        pattern = node_path.join('.', pattern);
+        return [pattern];
+      } else {
+        // Find all matching files for this pattern.
+        return glob.sync(pattern, options);
+      }
     });
 }

@@ -50,4 +50,18 @@ describe("expand", function() {
       done();
     });
   });
+
+  it("options.globOnly", function(done){
+    expand([
+      '*.js',
+      'abc.md'
+    ], {
+      cwd: fixtures,
+      globOnly: true
+    }, function (err, files) {
+      expect(err).to.equal(null);
+      expect(files.pop()).to.equal('abc.md');
+      done();
+    });
+  });
 });
