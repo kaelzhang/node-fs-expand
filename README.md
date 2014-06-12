@@ -15,6 +15,34 @@ The difference from [`glob`](http://www.npmjs.org/package/glob) is that `fs-expa
 - err `Error`
 - files `Array.<String>` filenames found matching the pattern(s)
 
+### Additioanl `options`
+
+- globOnly `Boolean=false` only process glob patterns, if a file does not contain globstars, `fs-expand` will not check the existence of the file.
+
+```
+<cwd>/
+     |-- a.js
+     |-- b.js
+```
+
+```js
+expand([
+  '*.js',
+  'abc.md'
+], {
+  cwd: cwd,
+  globOnly: true 
+
+}, function(err, files){
+  files; 
+  // -> 
+  // [
+  //   'a.js',
+  //   'b.js',
+  //   'abc.md' // actually, abc.md doesn't exist.
+  // ]
+});
+```
 
 ### Example
 
