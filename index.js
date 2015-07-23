@@ -62,6 +62,10 @@ function expand(patterns, options, callback) {
           pattern = node_path.join('.', pattern);
           done(null, [pattern]);
         } else {
+          if (pattern.indexOf('!') === 0) {
+            pattern = pattern.slice(1);
+          }
+
           glob(pattern, options, done);
         }
       };
