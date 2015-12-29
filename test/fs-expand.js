@@ -1,11 +1,11 @@
-'use strict';
+'use strict'
 
-var expect = require('chai').expect;
-var expand = require('../');
+var expect = require('chai').expect
+var expand = require('../')
 
-var node_path = require('path');
+var node_path = require('path')
 
-var fixtures = node_path.join(__dirname, 'fixtures');
+var fixtures = node_path.join(__dirname, 'fixtures')
 
 describe("expand", function() {
   it("async", function(done) {
@@ -15,14 +15,14 @@ describe("expand", function() {
     ], {
       cwd: fixtures
     }, function(err, files) {
-      expect(err).to.equal(null);
+      expect(err).to.equal(null)
       expect(files.sort()).to.deep.equal([
         'a.js',
         'b.js'
-      ]);
-      done();
-    });
-  });
+      ])
+      done()
+    })
+  })
 
   it("sync", function() {
     var files = expand.sync([
@@ -30,13 +30,13 @@ describe("expand", function() {
       '!c.js'
     ], {
       cwd: fixtures
-    });
+    })
 
     expect(files.sort()).to.deep.equal([
       'a.js',
       'b.js'
-    ]);
-  });
+    ])
+  })
 
   it("should maintain order", function(done){
     expand([
@@ -45,11 +45,11 @@ describe("expand", function() {
     ], {
       cwd: fixtures
     }, function (err, files) {
-      expect(err).to.equal(null);
-      expect(files.pop()).to.equal('README.md');
-      done();
-    });
-  });
+      expect(err).to.equal(null)
+      expect(files.pop()).to.equal('README.md')
+      done()
+    })
+  })
 
   it("options.globOnly", function(done){
     expand([
@@ -59,9 +59,26 @@ describe("expand", function() {
       cwd: fixtures,
       globOnly: true
     }, function (err, files) {
-      expect(err).to.equal(null);
-      expect(files.pop()).to.equal('abc.md');
-      done();
-    });
-  });
-});
+      expect(err).to.equal(null)
+      expect(files.pop()).to.equal('abc.md')
+      done()
+    })
+  })
+
+  it("avoid duplication", function(done){
+    expand([
+      '*.js',
+      '**/*.js'
+    ], {
+      cwd: fixtures
+    }, function (err, files) {
+      expect(err).to.equal(null)
+      expect(files.sort()).to.deep.equal([
+        'a.js',
+        'b.js',
+        'c.js'
+      ])
+      done()
+    })
+  })
+})
