@@ -1,6 +1,6 @@
 {
   "name": "fs-expand",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "An extended fs glob",
   "main": "index.js",
   "scripts": {
