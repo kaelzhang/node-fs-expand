@@ -7,51 +7,75 @@ var glob = require('glob')
 var _ = require('underscore')
 var async = require('async')
 var node_path = require('path')
+var util = require('util')
+var fs = require('fs')
+var wrap = require('wrap-as-async')
+var make_array = require('make-array')
 
-// Process specified wildcard glob patterns or filenames against a
-// callback, excluding and uniquing files in the result set.
-function processPatterns(patterns, fn) {
-
-  // Filepaths to return.
-  var result = []
-  // Iterate over flattened patterns array.
-  _.flatten(patterns).forEach(function(pattern) {
-    // If the first character is ! it should be omitted
-    var exclusion = pattern.indexOf('!') === 0
-    // If the pattern is an exclusion, remove the !
-    if (exclusion) {
-      pattern = pattern.slice(1)
-    }
-    // Find all matching files for this pattern.
-    var matches = fn(pattern)
-
-    if (exclusion) {
-      // If an exclusion, remove matching files.
-      result = _.difference(result, matches)
-    } else {
-      // Otherwise add matching files.
-      result = _.union(result, matches)
-    }
-  })
-
-  return result
-}
 
 function isGlob (pattern) {
   return ~ pattern.indexOf('*')
 }
 
 
+function parse_async_filter (filter) {
+  if (util.isFunction(filter)) {
+    return wrap(filter)
+  }
+
+  if (util.isString(filter)) {
+    return function (src) {
+      var done = this.async()
+      fs.stat(src, function (err, stat) {
+        if (err) {
+          return done(err)
+        }
+
+        if (filter in stat) {
+          done(null, stat[filter]())
+        }
+
+        invalid_stat_method(filter)
+      })
+    }
+  }
+}
+
+
+function parse_sync_filter (filter) {
+  if (util.isFunction(filter)) {
+    return filter
+  }
+
+  if (util.isString(filter)) {
+    return function (src) {
+      var stat = fs.statSync(src)
+      if (filter in stat) {
+        return stat[filter]()
+      }
+
+      invalid_stat_method(filter)
+    }
+  }
+}
+
+
+function invalid_stat_method (filter) {
+  throw new Error('"' + filter + '" is not a valid fs.Stats method name.')
+}
+
+
 // @param {options}
 // - globOnly: {Boolean} only deal with glob stars
 function expand(patterns, options, callback) {
-  patterns = Array.isArray(patterns) ? patterns : [patterns]
+  patterns = make_array(patterns)
 
-  if (typeof options === 'function') {
+  if (util.isFunction(options)) {
     callback = options
     options = {}
   }
-  
+
+  options.filter = parse_async_filter(options.filter)
 
   async.parallel(
     patterns
@@ -87,7 +111,26 @@ function expand(patterns, options, callback) {
         }
       })
 
-      callback(null, result)
+      if (!options.filter) {
+        return callback(null, result)
+      }
+
+      async.map(result, function (src, done) {
+        options.filter(absolutize_path(src, options), function (err, is) {
+          if (err) {
+            return done(err)
+          }
+
+          done(null, is && src)
+        })
+
+      }, function (err, result) {
+        if (err) {
+          return callback(err)
+        }
+
+        callback(null, result.filter(Boolean))
+      })
     }
   )
 }
@@ -98,15 +141,62 @@ function expandSync(patterns, options) {
   // object to an array and use that.
   patterns = Array.isArray(patterns) ? patterns : [patterns]
 
-  return patterns.length === 0 ? [] :
+  if (!patterns.length) {
+    return []
+  }
 
-    processPatterns(patterns, function(pattern) {
-      if (options.globOnly && !isGlob(pattern)) {
-        pattern = node_path.join('.', pattern)
-        return [pattern]
-      } else {
-        // Find all matching files for this pattern.
-        return glob.sync(pattern, options)
-      }
-    })
+  var result = processPatterns(patterns, function(pattern) {
+    if (options.globOnly && !isGlob(pattern)) {
+      pattern = node_path.join('.', pattern)
+      return [pattern]
+    } else {
+      // Find all matching files for this pattern.
+      return glob.sync(pattern, options)
+    }
+  })
+
+  if (!options.filter) {
+    return result
+  }
+
+  return result.filter(function (src) {
+    return options.filter(absolutize_path(src, options))
+  })
+}
+
+
+function absolutize_path (src, options) {
+  return options.cwd
+    ? node_path.join(options.cwd, src)
+    : src
+}
+
+
+// Process specified wildcard glob patterns or filenames against a
+// callback, excluding and uniquing files in the result set.
+function processPatterns(patterns, fn) {
+
+  // Filepaths to return.
+  var result = []
+  // Iterate over flattened patterns array.
+  _.flatten(patterns).forEach(function(pattern) {
+    // If the first character is ! it should be omitted
+    var exclusion = pattern.indexOf('!') === 0
+    // If the pattern is an exclusion, remove the !
+    if (exclusion) {
+      pattern = pattern.slice(1)
+    }
+    // Find all matching files for this pattern.
+    var matches = fn(pattern)
+
+    if (exclusion) {
+      // If an exclusion, remove matching files.
+      result = _.difference(result, matches)
+    } else {
+      // Otherwise add matching files.
+      result = _.union(result, matches)
+    }
+  })
+
+  return result
 }
