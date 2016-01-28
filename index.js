@@ -203,3 +203,11 @@ function processPatterns(patterns, fn) {
 
   return result
 }
+
+
+//compatibility for node <= 0.10.x
+if (!util.isFunction) {
+  util.isFunction = function (subject) {
+    return typeof subject === 'function'
+  }
+}
