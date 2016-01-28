@@ -211,3 +211,9 @@ if (!util.isFunction) {
     return typeof subject === 'function'
   }
 }
+
+if (!util.isString) {
+  util.isString = function (subject) {
+    return typeof subject === 'string'
+  }
+}
