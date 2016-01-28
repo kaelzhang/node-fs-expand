@@ -92,10 +92,6 @@ It can also be asynchoronous function by using the common [`this.async()`](https
 }
 ```
 
-#####
-
-
-
 ### Example
 
 ```
