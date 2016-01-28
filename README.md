@@ -19,9 +19,11 @@ The difference from [`glob`](http://www.npmjs.org/package/glob) is that `fs-expa
 - err `Error`
 - files `Array.<String>` filenames found matching the pattern(s)
 
-### Additioanl `options`
+### `options.globOnly`
 
-- globOnly `Boolean=false` only process glob patterns, if a file does not contain globstars, `fs-expand` will not check the existence of the file.
+Type `Boolean=false`
+
+Only process glob patterns, if a file does not contain globstars, `fs-expand` will not check the existence of the file.
 
 ```
 <cwd>/
@@ -35,11 +37,11 @@ expand([
   'abc.md'
 ], {
   cwd: cwd,
-  globOnly: true 
+  globOnly: true
 
 }, function(err, files){
-  files; 
-  // -> 
+  files;
+  // ->
   // [
   //   'a.js',
   //   'b.js',
@@ -47,6 +49,52 @@ expand([
   // ]
 });
 ```
+
+### `options.filter`
+
+Type `String|Function`
+
+Either a valid [`fs.Stats`](https://nodejs.org/api/fs.html#fs_class_fs_stats) method name or a function that is passed the matched `src` filepath and returns `true` or `false`.
+
+##### `fs.Stats` method name
+
+```js
+{
+  filter: 'isDirectory'
+}
+```
+
+##### Filter function
+
+```js
+{
+  filter: function (src) {
+    return fs.statSync(src).isFile()
+  }
+}
+```
+
+It can also be asynchoronous function by using the common [`this.async()`](https://www.npmjs.com/package/wrap-as-async) style, see [wrap-as-async](https://www.npmjs.com/package/wrap-as-async) for details
+
+```js
+{
+  filter: function (src) {
+    // Turns the filter function into an async one by calling `this.async()`
+    var done = this.async()
+    fs.stat(src, function (err, stat) {
+      if (err) {
+        return done(err)
+      }
+
+      done(null, stat.isFile())
+    })
+  }
+}
+```
+
+#####
+
+
 
 ### Example
 

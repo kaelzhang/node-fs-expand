@@ -4,6 +4,7 @@ var expect = require('chai').expect
 var expand = require('../')
 
 var node_path = require('path')
+var fs = require('fs')
 
 var fixtures = node_path.join(__dirname, 'fixtures')
 
@@ -80,5 +81,71 @@ describe("expand", function() {
       ])
       done()
     })
+  })
+})
+
+
+describe("#29, filter async", function(){
+  it("fs.Stats method name", function(done){
+    expand([
+      '*.js'
+    ], {
+      cwd: fixtures,
+      filter: 'isDirectory'
+    }, function (err, files) {
+      expect(err).to.equal(null)
+      expect(files).to.deep.equal(['b.js'])
+      done()
+    })
+  })
+
+  it("filter function", function(done){
+    expand([
+      '*.js'
+    ], {
+      cwd: fixtures,
+      filter: function (src) {
+        var done = this.async()
+        fs.stat(src, function (err, stat) {
+          if (err) {
+            return done(err)
+          }
+
+          done(null, stat.isFile())
+        })
+      }
+    }, function (err, files) {
+      expect(err).to.equal(null)
+      expect(files.sort()).to.deep.equal(['a.js', 'c.js'].sort())
+      done()
+    })
+  })
+})
+
+
+describe("#29: sync filter", function(){
+  it("fs.Stats method name", function(done){
+    var files = expand.sync([
+      '*.js'
+    ], {
+      cwd: fixtures,
+      filter: 'isDirectory'
+    })
+    expect(files).to.deep.equal(['b.js'])
+    done()
+  })
+
+  it("filter function", function(done){
+    var files = expand.sync([
+      '*.js'
+    ], {
+      cwd: fixtures,
+      filter: function (src) {
+        return fs.statSync(src).isFile()
+      }
+    })
+
+    expect(files.sort()).to.deep.equal(['a.js', 'c.js'].sort())
+    done()
   })
 })

@@ -24,18 +24,15 @@ function parse_async_filter (filter) {
   }
 
   if (util.isString(filter)) {
-    return function (src) {
-      var done = this.async()
+    return function (src, done) {
       fs.stat(src, function (err, stat) {
         if (err) {
           return done(err)
         }
 
-        if (filter in stat) {
+        if (check_stat_method(stat, filter)) {
           done(null, stat[filter]())
         }
-
-        invalid_stat_method(filter)
       })
     }
   }
@@ -50,7 +47,7 @@ function parse_sync_filter (filter) {
   if (util.isString(filter)) {
     return function (src) {
       var stat = fs.statSync(src)
-      if (filter in stat) {
+      if (check_stat_method(stat, filter)) {
         return stat[filter]()
       }
 
@@ -60,8 +57,12 @@ function parse_sync_filter (filter) {
 }
 
 
-function invalid_stat_method (filter) {
-  throw new Error('"' + filter + '" is not a valid fs.Stats method name.')
+function check_stat_method (stat, filter) {
+  if (!util.isFunction(stat[filter])) {
+    throw new Error('"' + filter + '" is not a valid fs.Stats method name.')
+  }
+
+  return true
 }
 
 
@@ -144,6 +145,8 @@ function expandSync(patterns, options) {
   if (!patterns.length) {
     return []
   }
+
+  options.filter = parse_sync_filter(options.filter)
 
   var result = processPatterns(patterns, function(pattern) {
     if (options.globOnly && !isGlob(pattern)) {
