@@ -1,7 +1,7 @@
 {
   "name": "fs-expand",
-  "version": "1.1.1",
-  "description": "An extended fs glob",
+  "version": "1.1.2",
+  "description": "An extended fs traverser",
   "main": "index.js",
   "scripts": {
     "test": "make test"
@@ -11,7 +11,12 @@
     "url": "git@github.com:kaelzhang/node-fs-expand.git"
   },
   "keywords": [
-    "fs-expand"
+    "fs",
+    "dir",
+    "find",
+    "ls",
+    "glob",
+    "ignore"
   ],
   "engines": {
     "node": ">=0.8.0"
@@ -27,7 +32,7 @@
   },
   "dependencies": {
     "async": "^1.5.0",
-    "glob": "^6.0.3",
+    "glob": "^7.0.3",
     "make-array": "^1.0.1",
     "underscore": "^1.8.3",
     "wrap-as-async": "^1.2.2"
